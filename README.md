@@ -22,11 +22,17 @@ Installation:
 
 1> First generate the inputs using generateMatrix.c. 128 is the size of the square matrix used as an example here. 
   Example:
+  
   $ gcc -c generateMatrix.c
+  
   $ gcc -o genMatrix generateMatrix.o
+  
   $ ./genMatrix > 128.txt
+  
   128
 
 2> Generate the executables using the makefile and run the executable as:
+
   $./divandconq.out < 128.txt > outputfile.txt
+  
   $./paradivandconq.out < 128.txt > outputfile.txt

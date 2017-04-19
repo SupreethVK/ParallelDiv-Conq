@@ -4,6 +4,7 @@
 #include<stdlib.h>
 #include<time.h>
 
+//function to calculate execution time in milliseconds
 double calc_time(struct timespec start, struct timespec stop) 
 {
 	double t;
@@ -12,6 +13,7 @@ double calc_time(struct timespec start, struct timespec stop)
 	return t;
 }
 
+//function to free allocated memory
 void freeThat(float ** a, float ** b, float ** c, float ** d, int n)
 {
 	for(int i=1; i<=n; ++i)
@@ -26,7 +28,8 @@ void freeThat(float ** a, float ** b, float ** c, float ** d, int n)
 	free(c);
 	free(d);
 }
-	
+
+//allocates memory to matrix variables
 float ** initMatrix(int n)
 {
 	float ** m = (float **) calloc(n, sizeof(float *));
@@ -37,6 +40,7 @@ float ** initMatrix(int n)
 	return m;
 }
 
+//function to read in input matrices
 float ** initMatrixV(int n)
 {
 	float ** m = (float **) calloc(n, sizeof(float *));
@@ -54,6 +58,7 @@ float ** initMatrixV(int n)
 	return m;
 }
 
+//function to add two matrices and return the sum matrix
 float ** addMatrix(float ** a, float ** b, int n)
 {
 	float ** c = initMatrix(n);
@@ -66,7 +71,8 @@ float ** addMatrix(float ** a, float ** b, int n)
 	}
 	return c;
 }
-	
+
+//recursive function to multiply two matrices using Divide and Conquer approach	
 float ** multiply(float ** a, float ** b, int n)
 {
 	int N = n/2;
@@ -86,6 +92,7 @@ float ** multiply(float ** a, float ** b, int n)
 		float ** B21 = initMatrix(N);
 		float ** B22 = initMatrix(N);
 		float ** Ctemp;
+		// Splitting the two matrices into smaller parts to be sent as parameters to the recursive call
 		for(int i=1; i<=(N); ++i)
 		{
 			for(int j=1; j<=(N); ++j)
@@ -128,6 +135,7 @@ float ** multiply(float ** a, float ** b, int n)
 			l = 1;
 			k++;
 		}
+		//All the recursive calls made here
 		float ** t1 = multiply(A11, B11, (N));
 		float ** t2 = multiply(A12, B21, (N));
 		float ** t3 = multiply(A11, B12, (N));
@@ -136,6 +144,8 @@ float ** multiply(float ** a, float ** b, int n)
 		float ** t6 = multiply(A22, B21, (N));
 		float ** t7 = multiply(A21, B12, (N));
 		float ** t8 = multiply(A22, B22, (N));
+		
+		//the resultant matrices are then coupled together for further operations as specified by the algorithm
 		Ctemp = addMatrix(t1, t2, (N));
 		for(int i=1; i<=(N); ++i)
 		{

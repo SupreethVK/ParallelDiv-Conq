@@ -5,6 +5,7 @@
 #include<time.h>
 #include<pthread.h>
 
+//structure to hold pairs of matrices and their dimension
 typedef struct 
 {
 	float ** M1;
@@ -12,12 +13,14 @@ typedef struct
 	int n; 
 } mat;
 
+//structure to hold a single matrix and its dimension
 typedef struct
 {
 	float ** m;
 	int n;
 } matS;
 
+//function to calculate the execution time in milliseconds
 double calc_time(struct timespec start, struct timespec stop) 
 {
 	double t;
@@ -26,6 +29,7 @@ double calc_time(struct timespec start, struct timespec stop)
 	return t;
 }
 
+//allocates memory to matrix variables
 float ** initMatrix(int n)
 {
 	float ** m = (float **) calloc(n, sizeof(float *));
@@ -36,6 +40,7 @@ float ** initMatrix(int n)
 	return m;
 }
 
+//function to read in input matrices
 float ** initMatrixV(int n)
 {
 	float ** m = (float **) calloc(n, sizeof(float *));
@@ -66,6 +71,7 @@ void displayMatrix(float ** m, int n)
 	}
 }
 
+//function to allocate memory to the two-matrix structure defined above
 mat * initStruct2(int N)
 {
 	mat * m = (mat *) malloc(sizeof(mat));
@@ -75,6 +81,8 @@ mat * initStruct2(int N)
 	return m;
 }
 
+
+//function to allocate memory to the one-matrix structure defined above
 matS * initStruct(int N)
 {
 	matS * M = (matS *) malloc(sizeof(matS));
@@ -83,6 +91,7 @@ matS * initStruct(int N)
 	return M;
 }
 
+//function to free allocated memory from matrix type
 void freeMat(float ** m, int N)
 {
 	for(int i=1; i<N; ++i)
@@ -92,6 +101,7 @@ void freeMat(float ** m, int N)
 	free(m);
 }
  
+//function to free allocated memory from mat type structures
 void freeStruct2(mat * M)
 {
 	freeMat(M->M1, M->n);
@@ -99,12 +109,14 @@ void freeStruct2(mat * M)
 	free(M);
 }
 
+//function to free allocated memory from matS type structures
 void freeStruct(matS * M)
 {
 	freeMat(M->m, M->n);
 	free(M);
 }
 
+//function to add two matrices
 float ** addMatrix(float ** a, float ** b, int n)
 {
 	float ** c = initMatrix(n);
@@ -118,14 +130,16 @@ float ** addMatrix(float ** a, float ** b, int n)
 	return c;
 }
 
+//Thread Routine that is called recursively
 void * remul(void * M)
 {
 	mat * MM = (mat *) M;
 	int ord = MM->n;
 	int N = ord/2;
 	
-	matS * c = initStruct(ord);
+	matS * c = initStruct(ord); //allocating memory to the resultant matrix
 	
+	//Base condition 
 	if(ord==1)
 	{
 		c->m[1][1] = MM->M1[1][1] * MM->M2[1][1] ;
@@ -133,6 +147,7 @@ void * remul(void * M)
 	else
 	{
 		float ** temp;
+		//Creating the structures which will be used to store the matrix pairs following the algorithm
 		mat * m1 = initStruct2(N);//A11, B11
 	
 		mat * m2 = initStruct2(N);//A12, B21
@@ -198,6 +213,7 @@ void * remul(void * M)
 			l = 1;
 			k++;
 		}
+		//Recursive calls 
 		matS * t1 = remul((void *) m1);
 		matS * t2 = remul((void *) m2);
 		matS * t3 = remul((void *) m3);
@@ -215,6 +231,9 @@ void * remul(void * M)
 		freeStruct2(m6);
 		freeStruct2(m7);
 		freeStruct2(m8);
+		
+		//After getting the resultant matrices from the recursive calls, 
+		//pair matrices for further operations specified by the algorithm
 		temp = addMatrix(t1->m, t2->m, N);
 		for(int i=1; i<=(N); ++i)
 		{
@@ -275,7 +294,8 @@ void * remul(void * M)
 	return (void *) c;
 }
 		
-		
+//Wrapper function for the routine function,
+//Here is where the threads are created and initialised
 matS * multiply(mat * M)
 {
 	int n = M->n;
@@ -303,6 +323,7 @@ matS * multiply(mat * M)
 	float ** temp;
 	matS * c = initStruct(n);
 	
+	//Splitting the input matrices into their submatrices and pairing them accordingly
 	mat * m1 = initStruct2(N);//A11, B11
 	mat * m2 = initStruct2(N);//A12, B21
 	mat * m3 = initStruct2(N);//A11, B12
@@ -361,7 +382,8 @@ matS * multiply(mat * M)
 		l = 1;
 		k++;
 	}
-		
+	
+	//Creating the threads and passing the matrix pairs to the thread routine
 	pthread_create(&tid[0], NULL, remul, (void*) m1);
 	pthread_create(&tid[1], NULL, remul, (void*) m2);
 	pthread_create(&tid[2], NULL, remul, (void*) m3);
@@ -371,6 +393,7 @@ matS * multiply(mat * M)
 	pthread_create(&tid[6], NULL, remul, (void*) m7);
 	pthread_create(&tid[7], NULL, remul, (void*) m8);
 	
+	//Collecting the threads and storing the return values in the second parameter passed
 	pthread_join(tid[0], &stat1);
 	
 	c1 = (matS *) stat1; //A11, B11
@@ -405,6 +428,7 @@ matS * multiply(mat * M)
 	freeStruct2(m7);
 	freeStruct2(m8);
 	
+	//Resultant matrices are paired accordingly for further operations as specified by the algorithm
 	temp = addMatrix(c1->m, c2->m, N);
 	for(int i=1; i<=(N); ++i)
 	{
